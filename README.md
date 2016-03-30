@@ -9,3 +9,14 @@
 *italycs*
 
 [hola](http://www.wbur.org/listen/live)
+
+
+Aca hay bullet points
+  * primero
+  * segundo
+  * 
+  
+```R
+ rnorm(10)
+
+```
