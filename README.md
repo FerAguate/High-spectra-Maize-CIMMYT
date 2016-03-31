@@ -7,15 +7,11 @@ Load and prepare data
 load('objects.rdata')
 y = scale(Y[,1])
 ```
-
 Define time point
 ```R
 timePoint = 5
 ```
-
-
 Fitting models on training data and obtain predictions matrix
-
 ```R
 YHat = matrix(nrow = length(y), ncol = 4)
 colnames(YHat) = c('NDVI', 'OLS', 'PC', 'BB')
@@ -33,9 +29,14 @@ library(BGLR)
 Model_BB = BGLR(y = y, ETA = list(list(X = X, model = 'BayesB')), nIter = 103000, burnIn = 3000)
 YHat[,'BB'] = X %*% Model_BB$ETA[[1]]$b + Model_BB$mu
 ```
-
 Calculate Across trial correlations in training data
 ```R
 cor(y,YHat)
 ```
+Calculate within trial correlations in training data
+```R
+do.call('rbind', lapply(by(cbind(y,YHat), Y[,2], I), function(x) cor(x[,1], x[,2:5])))
+```
+
+
 
