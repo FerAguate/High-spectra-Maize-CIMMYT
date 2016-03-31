@@ -33,7 +33,7 @@ Calculate Across trial correlations in training data
 ```R
 cor(y,YHat)
 ```
-*          NDVI       OLS        PC        BB*
+          *NDVI       OLS        PC        BB*
 *[1,] 0.5800407 0.7629917 0.6233361 0.7508183*
 
 Calculate within trial correlations in training data
