@@ -30,11 +30,11 @@ library(BGLR)
 model_BB = BGLR(y = y, ETA = list(list(X = X, model = 'BayesB')), nIter = 100000, burnIn = 3000)
 YHat[,'BB'] = X %*% model_BB$ETA[[1]]$b + model_BB$mu
 ```
-Calculate Across trial correlations in training data
+Calculate across-trial correlations in training data
 ```R
 cor(y, YHat)
 ```
-Calculate within trial correlations in training data
+Calculate within-trial correlations in training data
 ```R
 do.call('rbind', lapply(by(cbind(y, YHat), Y[,2], I), function(x) cor(x[,1], x[,2:5])))
 ```
@@ -60,3 +60,28 @@ for (i in unique(trial)){
   YHat_cv[tst,'BB'] = X.TST %*% model_BB_cv$ETA[[1]]$b + model_BB_cv$mu
 }
 ```
+Joining multi-time point
+```R
+mtP=c(4,5)
+YHat_mtp = data.frame(matrix(nrow=length(y),ncol=4))
+colnames(YHat_mtp)=c('NDVI','OLS','PC','BB')
+
+Xtp = list()
+for (tp in mtP){Xtp[[which(tp == mtP)]] = eval(parse(text = paste0('X', tp)))}
+Xmtp = do.call('cbind',Xtp)
+SVD = svd(Xjoin, nu = ncol(Xjoin), nv = 0)
+PCmtp = SVD$u %*% diag(SVD$d)[,1:5]
+  
+model_NDVI_mtP = lm(y ~ NDVI[,mtP])
+YHat_mtp[,'NDVI'] = cbind(1,NDVI[,mtP]) %*% coef(model_NDVI_mtP)
+model_OLS_mtP = lm(y ~ Xmtp)
+YHat_mtp[,'OLS'] = cbind(1, Xmtp) %*% coef(model_OLS_mtP)
+model_PC_mtP = lm(y ~ PCmtp)
+YHat_mtp[,'PC'] = cbind(1, PCmtp) %*% coef(model_PC_mtP)
+  
+ETA=list()
+for (L in order(timePoint)){ETA[[L]]= list(X=Xtp[[L]],model=model)}
+model_BB_mtp = BGLR(y = y, ETA = ETA, nIter = 100000, burnIn = 3000)
+YHat[,'BB'] = cbind(1, Xmtp) %*% do.call('c', lapply(order(mtP), function(x) model_BB_mtp$ETA[[x]]$b)) + model_BB_mtp$mu
+```
+
