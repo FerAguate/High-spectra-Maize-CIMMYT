@@ -2,9 +2,15 @@
 
 ## Supplementary methods
 
-Load and prepare data
+To load the R objects that contains the data, follows:
 ```R
 load('objects.rdata')
+ls()
+[1] "CWMI" "mND"  "NDVI" "PRI"  "X1"   "X2"   "X3"   "X4"   "X5"   "Y" 
+```
+
+
+```R
 y = scale(Y[,1])
 trial = as.numeric(Y[,2])
 ```
