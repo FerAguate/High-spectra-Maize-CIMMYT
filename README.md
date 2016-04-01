@@ -8,17 +8,17 @@ load('objects.rdata')
 ls()
 ```
 ######[1] "CWMI" "mND"  "NDVI" "PRI"  "X1"   "X2"   "X3"   "X4"   "X5"   "Y" 
-Where CWMI, mND, NDVI and PRI are objects of matrix class of each index by time points (in columns). X1 to X5 are matrices with 62 reflectance bands (in columns) and 1231 observations. 
-
+Where CWMI, mND, NDVI and PRI are matrix class objects for the indices by time points (in columns). X1 to X5 are matrices with 62 reflectance bands (in columns) and 1231 observations. Object Y is a data frame that contains grain yield observations and the ID for trials.
+To create observations an trial vectors, run the next script:
 ```R
 y = scale(Y[,1])
 trial = as.numeric(Y[,2])
 ```
-Define time point
+Define time point as:
 ```R
 tP = 5
 ```
-Fitting models on training data and obtain predictions matrix
+Fitting models on training data and obtain predictions matrix (YHat).
 ```R
 YHat = matrix(nrow = length(y), ncol = 4)
 colnames(YHat) = c('NDVI', 'OLS', 'PC', 'BB')
@@ -36,15 +36,15 @@ library(BGLR)
 model_BB = BGLR(y = y, ETA = list(list(X = X, model = 'BayesB')), nIter = 100000, burnIn = 3000)
 YHat[,'BB'] = X %*% model_BB$ETA[[1]]$b + model_BB$mu
 ```
-Calculate across-trial correlations in training data
+Calculate across-trial correlations in training data.
 ```R
 cor(y, YHat)
 ```
-Calculate within-trial correlations in training data
+Calculate within-trial correlations in training data.
 ```R
 do.call('rbind', lapply(by(cbind(y, YHat), Y[,2], I), function(x) cor(x[,1], x[,2:5])))
 ```
-Obtain leave-one-trial out predictions
+Obtain leave-one-trial out predictions.
 ```R
 YHat_cv = matrix(nrow = length(y), ncol=4)
 colnames(YHat_cv) = c('NDVI', 'OLS', 'PC', 'BB')
@@ -66,7 +66,7 @@ for (i in unique(trial)){
   YHat_cv[tst,'BB'] = X.TST %*% model_BB_cv$ETA[[1]]$b + model_BB_cv$mu
 }
 ```
-Joining multi-time point
+Fitting models with multi-time points on the training data. 
 ```R
 mtP=c(4,5)
 YHat_mtp = data.frame(matrix(nrow=length(y),ncol=4))
