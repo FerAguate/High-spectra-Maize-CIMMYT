@@ -66,9 +66,12 @@ for (i in unique(trial)){
   YHat_cv[tst,'BB'] = X.TST %*% model_BB_cv$ETA[[1]]$b + model_BB_cv$mu
 }
 ```
-Fitting models with multi-time points on the training data. 
+Define multi-time points:
 ```R
-mtP=c(4,5)
+mtP=4:5
+```
+Fitting models with multi-time points on the training data.
+```R
 YHat_mtp = data.frame(matrix(nrow=length(y),ncol=4))
 colnames(YHat_mtp)=c('NDVI','OLS','PC','BB')
 
