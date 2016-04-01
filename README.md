@@ -6,9 +6,9 @@ To load the R objects that contains the data, follows:
 ```R
 load('objects.rdata')
 ls()
-[1] "CWMI" "mND"  "NDVI" "PRI"  "X1"   "X2"   "X3"   "X4"   "X5"   "Y" 
 ```
-
+######[1] "CWMI" "mND"  "NDVI" "PRI"  "X1"   "X2"   "X3"   "X4"   "X5"   "Y" 
+Where CWMI, mND, NDVI and PRI are objects of matrix class of each index by time points (in columns). X1 to X5 are matrices with 62 reflectance bands (in columns) and 1231 observations. 
 
 ```R
 y = scale(Y[,1])
