@@ -8,17 +8,17 @@ load('objects.rdata')
 ls()
 ```
 ######[1] "CWMI" "mND"  "NDVI" "PRI"  "X1"   "X2"   "X3"   "X4"   "X5"   "Y" 
-Where CWMI, mND, NDVI and PRI are matrix class objects for the indices by time points (in columns). X1 to X5 are matrices with 62 reflectance bands (in columns) and 1231 observations. Object Y is a data frame that contains grain yield observations and the ID for trials.
-To create observations an trial vectors, run the next script:
+Where CWMI, mND, NDVI and PRI are matrix class objects for the indices with time point 1 to 5 in columns. X1 to X5 are matrices with the 62 reflectance bands in columns, and the 1231 plot observations in rows. Object Y is a data frame that contains two columns, the first has grain yield observations and the second ID for trials.
+To create the observations vector and a vector for trial identifications, execute the following:
 ```R
 y = scale(Y[,1])
 trial = as.numeric(Y[,2])
 ```
-Define time point as:
+To define a time point to start working with, create a "tp" object as:
 ```R
 tP = 5
 ```
-Fitting models on training data and obtain predictions matrix (YHat).
+The next script Fits models on training data and obtain predictions matrix (YHat).
 ```R
 YHat = matrix(nrow = length(y), ncol = 4)
 colnames(YHat) = c('NDVI', 'OLS', 'PC', 'BB')
@@ -36,15 +36,15 @@ library(BGLR)
 model_BB = BGLR(y = y, ETA = list(list(X = X, model = 'BayesB')), nIter = 100000, burnIn = 3000)
 YHat[,'BB'] = X %*% model_BB$ETA[[1]]$b + model_BB$mu
 ```
-Calculate across-trial correlations in training data.
+The next stands to obtain across-trial correlations in training data.
 ```R
 cor(y, YHat)
 ```
-Calculate within-trial correlations in training data.
+For within-trial correlations in training data.
 ```R
 do.call('rbind', lapply(by(cbind(y, YHat), Y[,2], I), function(x) cor(x[,1], x[,2:5])))
 ```
-Obtain leave-one-trial out predictions.
+Leave-one-trial out predictions are obtain by fitting models with training trials and predicting in each of the selected testing trial.
 ```R
 YHat_cv = matrix(nrow = length(y), ncol=4)
 colnames(YHat_cv) = c('NDVI', 'OLS', 'PC', 'BB')
@@ -66,11 +66,11 @@ for (i in unique(trial)){
   YHat_cv[tst,'BB'] = X.TST %*% model_BB_cv$ETA[[1]]$b + model_BB_cv$mu
 }
 ```
-Define multi-time points:
+Set multi-time points by creating a numeric vector:
 ```R
 mtP=4:5
 ```
-Fitting models with multi-time points on the training data.
+This code will Fit models with multi-time point information on the training data to evaluate godness of fit.
 ```R
 YHat_mtp = data.frame(matrix(nrow=length(y),ncol=4))
 colnames(YHat_mtp)=c('NDVI','OLS','PC','BB')
