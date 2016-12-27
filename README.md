@@ -1,21 +1,24 @@
-#Number of LVs for PLS model
-#Load pls library
+##USE OF HIGH-RESOLUTION IMAGE DATA OUTPERFORMS VEGETATION INDICES IN PREDICTION OF MAIZE YIELD
+###Supplementary methods
+
+####Number of LVs for PLS model
+####Load pls library
 ```R
 library(pls)
 ```
-#Loading data from heat and Drought Stress trials only
+####Loading data from heat and Drought Stress trials only
 ```R
 load('objectsDS.rdata')
 ```
-#Create an object for scaled grain yield
+####Create an object for scaled grain yield
 ```R
 y = scale(Y[,1])
 ```
-#Initialize the list that will contain the number of LVs
+####Initialize the list that will contain the number of LVs
 ```R
 nLV.List=list()
 ```
-#The next will run for each of the single and multi-time points
+####The next will run for each of the single and multi-time points
 ```R
 for (w in 1:9){
   if(w < 6)  {X = eval(parse(text=paste0("X",w)))}
@@ -49,19 +52,19 @@ for (w in 1:9){
   nLV.List[[w]]=nLV.BEST
 }
 ```
-#The following script performs leave-one-trial out cross validation to obtain
-#predictions for each model with data from heat and drought trials. Predictions of the irrigated
-#trial were obtained separately with an adaptated version of this code.
+####The following script performs leave-one-trial out cross validation to obtain
+####predictions for each model with data from heat and drought trials. Predictions of the irrigated
+####trial were obtained separately with an adaptated version of this code.
 
-#Load libraries
+####Load libraries
 ```R
 library(BGLR)
 ```
-#Create an object for identification of trials
+####Create an object for identification of trials
 ```R
 trials = as.integer(factor(Y[,2]))
 ```
-#To obtain predictions from single time point data
+####To obtain predictions from single time point data
 ```R
 for (k in 1:5){
   #initialize the object that will contain predictions
@@ -133,7 +136,7 @@ for (k in 1:5){
   save(y,YHat,trials,file=paste0('YHATDSCV',timePoint,'.RData'))
 }
 ```
-#Predictions with multi-time points data
+####Predictions with multi-time points data
 ```R
 for (z in 1:4){
   timePoint = c(z:5)
@@ -212,12 +215,12 @@ for (z in 1:4){
   save(y,YHat,trials,file=paste0('AnalyzingData/output/YHATDSCV',paste0(timePoint,collapse = '-'),'.RData'))
 }
 ```
-#Bootstrap correlations and SE
-#number of replicates
+####Bootstrap correlations and SE
+####number of replicates
 ```R
 nRep= 5000
 ```
-#Load and bind predictions with heat and drought stress data and  irrigated data for T5.
+####Load and bind predictions with heat and drought stress data and  irrigated data for T5.
 ```R
 load('YHATDSCV5.rdata')
 load('YHATWWCV5.rdata')
@@ -225,12 +228,12 @@ YHAT=rbind(YHat,YHatWW)
 y=rbind(y,yWW)
 trials=rbind(trials,trialsWW) #trial 12 is the irrigated one
 ```
-#Initialize objects for weighted within-trial correlations
+####Initialize objects for weighted within-trial correlations
 ```R
 WW.WWTC= matrix(nrow=nRep,ncol=ncol(YHAT)) #Well-watered conditions
 DS.WWTC= matrix(nrow=nRep,ncol=ncol(YHAT)) #Drought stress
 ```
-#Run bootstrap correlations for each model
+####Run bootstrap correlations for each model
 ```R
 for (index in 1:ncol(YHAT)){
   COR= matrix(nrow=nRep,ncol=length(unique(trials)))
@@ -251,7 +254,7 @@ for (index in 1:ncol(YHAT)){
 }
 colnames(WW.WWTC) <- colnames(DS.WWTC) <- colnames(YHAT)
 ```
-#Table with results
+####Table with results
 ```R
 PropMatrix = matrix(ncol=ncol(YHAT),nrow=ncol(YHAT))
 for(i in 1:ncol(YHAT)){ 
