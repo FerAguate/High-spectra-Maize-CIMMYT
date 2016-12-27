@@ -2,75 +2,67 @@
 ###Supplementary methods
 
 ####Number of LVs for PLS model
-####Load pls library
 ```R
+#Load pls library
 library(pls)
-```
-####Loading data from heat and Drought Stress trials only
-```R
+
+#Loading data from heat and Drought Stress trials only
 load('objectsDS.rdata')
-```
-####Create an object for scaled grain yield
-```R
+
+#Create an object for scaled grain yield
 y = scale(Y[,1])
-```
-####Initialize the list that will contain the number of LVs
-```R
+
+#Initialize the list that will contain the number of LVs
 nLV.List=list()
-```
+
 ####The next will run for each of the single and multi-time points
-```R
 for (w in 1:9){
   if(w < 6)  {X = eval(parse(text=paste0("X",w)))}
-  if(w == 6) {X =cbind(X4,X5)}
-  if(w == 7) {X =cbind(X3,X4,X5)}
-  if(w == 8) {X =cbind(X2,X3,X4,X5)}
-  if(w == 9) {X =cbind(X1,X2,X3,X4,X5)}
+  if(w == 6) {X = cbind(X4,X5)}
+  if(w == 7) {X = cbind(X3,X4,X5)}
+  if(w == 8) {X = cbind(X2,X3,X4,X5)}
+  if(w == 9) {X = cbind(X1,X2,X3,X4,X5)}
   
-  nFolds=length(unique(Y[,2]))
-  nLV=seq(from=2,to=15,by=1)
-  folds=as.numeric(Y[,2])
-  COR.TST=rep(NA,nFolds)
-  nLV.BEST=rep(NA,nFolds)
+  nFolds = length(unique(Y[,2]))
+  nLV = seq(from=2,to=15,by=1)
+  folds = as.numeric(Y[,2])
+  COR.TST = rep(NA,nFolds)
+  nLV.BEST = rep(NA,nFolds)
   
   for(i in unique(folds)){
-    trn=which(folds!=i)
-    COR=matrix(nrow=11,ncol=length(nLV))
+    trn = which(folds!=i)
+    COR = matrix(nrow=11,ncol=length(nLV))
     
     for(j in 1:11){
-      trn_trn=which(folds[trn]!=j)
+      trn_trn = which(folds[trn]!=j)
       for(k in 1:length(nLV)){
-        COR[j,k]=cor(y[-trn_trn],predict(plsr(formula = y[trn_trn]~X[trn_trn,], ncomp = nLV[k]), ncomp = nLV[k],newdata = X[-trn_trn,]))
+        COR[j,k] = cor(y[-trn_trn],predict(plsr(formula=y[trn_trn]~X[trn_trn,],ncomp=nLV[k]),ncomp=nLV[k],newdata=X[-trn_trn,]))
       }
       print(paste("subFold=",j,"Fold=",i,"Timepoint=",w))
     }
     
-    COR=colMeans(COR)
-    nLV.BEST[i]=nLV[which(COR==min(COR))]
-    COR.TST[i]=cor(y[-trn],predict(plsr(formula = y[trn]~X[trn,], ncomp = nLV.BEST[i]), ncomp = nLV.BEST[i],newdata = X[-trn,]))
+    COR = colMeans(COR)
+    nLV.BEST[i] = nLV[which(COR==min(COR))]
+    COR.TST[i] = cor(y[-trn],predict(plsr(formula=y[trn]~X[trn,],ncomp=nLV.BEST[i]),ncomp=nLV.BEST[i],newdata=X[-trn,]))
   }
-  nLV.List[[w]]=nLV.BEST
+  nLV.List[[w]] = nLV.BEST
 }
 ```
-####The following script performs leave-one-trial out cross validation to obtain
-####predictions for each model with data from heat and drought trials. Predictions of the irrigated
-####trial were obtained separately with an adaptated version of this code.
+####The following script performs leave-one-trial out cross validation to obtain predictions for each model with data from heat and drought trials. Predictions of the irrigated trial were obtained separately with an adaptated version of this code.
 
-####Load libraries
 ```R
+#Load libraries
 library(BGLR)
-```
-####Create an object for identification of trials
-```R
+
+#Create an object for identification of trials
 trials = as.integer(factor(Y[,2]))
-```
-####To obtain predictions from single time point data
-```R
+
+#Obtain predictions from single time point data
 for (k in 1:5){
   #initialize the object that will contain predictions
   YHat = data.frame(matrix(nrow=length(y),ncol=9))
   colnames(YHat)=c('NDVI','CWMI','mND','PRI','MTCI','MCARI2','OLS','PLS','BayesB')
-  X = eval(parse(text=paste0('X', k)))
+  X = eval(parse(text=paste0('X',k)))
   X = X/sqrt(ncol(X))
   #Cross Validation leave one trial out
   for (i in unique(trials)){
@@ -84,51 +76,41 @@ for (k in 1:5){
     mND.TRN = mND[trn,k] ; mND.TST = mND[tst,k] 
     PRI.TRN = PRI[trn,k] ; PRI.TST = PRI[tst,k]
     MTCI.TRN = MTCI[trn,k] ; MTCI.TST = MTCI[tst,k]
-    MCARI2.TRN=MCARI2[trn,k] ; MCARI2.TST = MCARI2[tst,k]
-    
+    MCARI2.TRN=MCARI2[trn,k] ; MCARI2.TST = MCARI2[tst,k]    
     # NDVI
     Model1 = lm(yTRN ~ NDVI.TRN)
     pY1 = as.matrix(NDVI.TST)%*%(coef(Model1)[-1]) + coef(Model1)[1]
     YHat[tst,'NDVI'] = pY1
-    
     # CWMI
     Model2 = lm(yTRN ~ CWMI.TRN)
     pY2 = as.matrix(CWMI.TST)%*%(coef(Model2)[-1]) + coef(Model2)[1]
     YHat[tst,'CWMI'] = pY2
-    
     # mND
     Model3 = lm(yTRN ~ mND.TRN)
     pY3 = as.matrix(mND.TST)%*%(coef(Model3)[-1]) + coef(Model3)[1]
     YHat[tst,'mND'] = pY3
-    
     # PRI
     Model4 = lm(yTRN ~  PRI.TRN)
     pY4 = as.matrix(PRI.TST)%*%(coef(Model4)[-1]) + coef(Model4)[1]
     YHat[tst,'PRI'] = pY4
-    
     # MTCI
     Model5 = lm(yTRN ~ MTCI.TRN)
     pY5 = as.matrix(MTCI.TST)%*%(coef(Model5)[-1]) + coef(Model5)[1]
     YHat[tst,'MTCI'] = pY5
-    
     # MCARI2
     Model6 = lm(yTRN ~ MCARI2.TRN)
     pY6 = as.matrix(MCARI2.TST)%*%(coef(Model6)[-1]) + coef(Model6)[1]
     YHat[tst,'MCARI2'] = pY6
-    
     # OLS
     Model7 = lm(yTRN ~ X.TRN) 
     pY7 = as.matrix(X.TST)%*%(coef(Model7)[-1]) + coef(Model7)[1]
     YHat[tst,'OLS'] = pY7
-    
     # PLS
     Model8 = plsr(formula = yTRN~X.TRN, ncomp = nLV.List[[k]][i])
-    pY8 = predict(Model8,ncomp = nLV.List[[k]][i],newdata = X.TST)
+    pY8 = predict(Model8,ncomp=nLV.List[[k]][i],newdata=X.TST)
     YHat[tst,'PLS'] = pY8
-    
     # BayesB
-    Model9 = BGLR(y=yTRN,ETA=list(list(X=X.TRN,model='BayesB')),nIter=120000,burnIn=5000, 
-                  verbose = F, rmExistingFiles = T, saveAt = "~/tmp_uavs", groups=trials[trn])
+    Model9 = BGLR(y=yTRN,ETA=list(list(X=X.TRN,model='BayesB')),nIter=120000,burnIn=5000,      verbose=F,rmExistingFiles=T,saveAt="~/tmp_uavs",groups=trials[trn])
     pY9 = as.matrix(X.TST)%*%Model9$ETA[[1]]$b + Model9$mu
     YHat[tst,'BayesB'] = pY9
   }
@@ -160,54 +142,44 @@ for (z in 1:4){
     PRI.TRN = PRI[trn,timePoint] ; PRI.TST = PRI[tst,timePoint]
     MTCI.TRN = MTCI[trn,timePoint] ; MTCI.TST = MTCI[tst,timePoint]
     MCARI2.TRN = MCARI2[trn,timePoint] ; MCARI2.TST = MCARI2[tst,timePoint]
-    
     # NDVI
     Model = lm(yTRN ~ NDVI.TRN)
     pY = as.matrix(NDVI.TST)%*%(coef(Model)[-1]) + coef(Model)[1]
     YHat[tst,'NDVI'] = pY
-    
     # CWMI
     Model2 = lm(yTRN ~ CWMI.TRN)
     pY2 = as.matrix(CWMI.TST)%*%(coef(Model2)[-1]) + coef(Model2)[1]
     YHat[tst,'CWMI'] = pY2
-    
     # mND
     Model3 = lm(yTRN ~ mND.TRN)
     pY3 = as.matrix(mND.TST)%*%(coef(Model3)[-1]) + coef(Model3)[1]
     YHat[tst,'mND'] = pY3
-    
     # PRI
     Model4 = lm(yTRN ~ PRI.TRN)
     pY4 = as.matrix(PRI.TST)%*%(coef(Model4)[-1]) + coef(Model4)[1]
     YHat[tst,'PRI'] = pY4
-    
     # MTCI
     Model5 = lm(yTRN ~ MTCI.TRN)
     pY5 = as.matrix(MTCI.TST)%*%(coef(Model5)[-1]) + coef(Model5)[1]
     YHat[tst,'MTCI'] = pY5
-    
     # MCARI2
     Model6 = lm(yTRN ~ MCARI2.TRN)
     pY6 = as.matrix(MCARI2.TST)%*%(coef(Model6)[-1]) + coef(Model6)[1]
     YHat[tst,'MCARI2'] = pY6
-    
     # OLS
     Model7 = lm(yTRN ~ X.TRN) 
     pY7 = as.matrix(X.TST)%*%(coef(Model7)[-1]) + coef(Model7)[1]
     YHat[tst,'OLS'] = pY7
-    
     # PLS
-    Model8 = plsr(formula = yTRN~X.TRN, ncomp = nLV.List[[10-z]][i])
-    pY8 = predict(Model8,ncomp = nLV.List[[10-z]][i],newdata = X.TST)
+    Model8 = plsr(formula=yTRN~X.TRN,ncomp=nLV.List[[10-z]][i])
+    pY8 = predict(Model8,ncomp=nLV.List[[10-z]][i],newdata=X.TST)
     YHat[tst,'PLS'] = pY8
-    
     # BayesB
     ETA = list()
     for (L in order(timePoint)){
       ETA[[L]] = list(X=X[[L]][trn,],model='BayesB')
     }
-    Model9 = BGLR(y=yTRN,ETA=ETA,nIter=120000,burnIn=5000,verbose=F,rmExistingFiles=T,
-                  saveAt="~/tmp_uavs")
+    Model9 = BGLR(y=yTRN,ETA=ETA,nIter=120000,burnIn=5000,verbose=F,rmExistingFiles=T,saveAt="~/tmp_uavs")
     pY9 = as.matrix(X.TST)%*%do.call('c',lapply(order(timePoint),function(x)Model9$ETA[[x]]$b)) + Model9$mu
     YHat[tst,'BayesB'] = pY9
   }
@@ -216,40 +188,38 @@ for (z in 1:4){
 }
 ```
 ####Bootstrap correlations and SE
-####number of replicates
+
 ```R
+#number of replicates
 nRep= 5000
-```
-####Load and bind predictions with heat and drought stress data and  irrigated data for T5.
-```R
+
+#Load and bind predictions with heat and drought stress data and  irrigated data for T5.
 load('YHATDSCV5.rdata')
 load('YHATWWCV5.rdata')
-YHAT=rbind(YHat,YHatWW)
-y=rbind(y,yWW)
-trials=rbind(trials,trialsWW) #trial 12 is the irrigated one
-```
-####Initialize objects for weighted within-trial correlations
-```R
-WW.WWTC= matrix(nrow=nRep,ncol=ncol(YHAT)) #Well-watered conditions
-DS.WWTC= matrix(nrow=nRep,ncol=ncol(YHAT)) #Drought stress
-```
-####Run bootstrap correlations for each model
-```R
+YHAT = rbind(YHat,YHatWW)
+y = rbind(y,yWW)
+trials = rbind(trials,trialsWW) #trial 12 is the irrigated one
+
+#Initialize objects for weighted within-trial correlations
+WW.WWTC = matrix(nrow=nRep,ncol=ncol(YHAT)) #Well-watered conditions
+DS.WWTC = matrix(nrow=nRep,ncol=ncol(YHAT)) #Drought stress
+
+#Run bootstrap correlations for each model
 for (index in 1:ncol(YHAT)){
-  COR= matrix(nrow=nRep,ncol=length(unique(trials)))
-  SV= matrix(nrow=nRep,ncol=length(unique(trials)))
+  COR = matrix(nrow=nRep,ncol=length(unique(trials)))
+  SV = matrix(nrow=nRep,ncol=length(unique(trials)))
   for(trial in 1:length(unique(trials))){
-    n=sum(trials==trial)
+    n = sum(trials==trial)
     print(paste('index=',index,'trial=',trial))
     for(rep in 1:nRep){
-      tmp= sample(1:n,size=n,replace=TRUE)
-      COR[rep,trial]= cor(y[trials==trial][tmp],YHAT[trials==trial,index][tmp])
-      SV[rep,trial]= (1-COR[rep,trial]^2)/(n-2)
+      tmp = sample(1:n,size=n,replace=TRUE)
+      COR[rep,trial] = cor(y[trials==trial][tmp],YHAT[trials==trial,index][tmp])
+      SV[rep,trial] = (1-COR[rep,trial]^2)/(n-2)
     }
   }
   for(rep in 1:nRep){
-    DS.WWTC[rep,index]= sum(COR[rep,1:11]/SV[rep,1:11])/sum(1/SV[rep,1:11])
-    WW.WWTC[rep,index]= sum(COR[rep,12]/SV[rep,12])/sum(1/SV[rep,12])
+    DS.WWTC[rep,index] = sum(COR[rep,1:11]/SV[rep,1:11])/sum(1/SV[rep,1:11])
+    WW.WWTC[rep,index] = sum(COR[rep,12]/SV[rep,12])/sum(1/SV[rep,12])
   }
 }
 colnames(WW.WWTC) <- colnames(DS.WWTC) <- colnames(YHAT)
