@@ -1,21 +1,21 @@
-##USE OF HIGH-RESOLUTION IMAGE DATA OUTPERFORMS VEGETATION INDICES IN PREDICTION OF MAIZE YIELD
-###Supplementary methods
+## USE OF HIGH-RESOLUTION IMAGE DATA OUTPERFORMS VEGETATION INDICES IN PREDICTION OF MAIZE YIELD
+### Supplementary methods
 
-####Number of LVs for PLS model
+#### Number of LVs for PLS model
 ```R
-#Load pls library
+# Load pls library
 library(pls)
 
-#Loading data from heat and Drought Stress trials only
+# Loading data from heat and Drought Stress trials only
 load('objectsDS.rdata')
 
-#Create an object for scaled grain yield
+# Create an object for scaled grain yield
 y = scale(Y[,1])
 
-#Initialize the list that will contain the number of LVs
+# Initialize the list that will contain the number of LVs
 nLV.List=list()
 
-####The next will run for each of the single and multi-time points
+#### The next will run for each of the single and multi-time points
 for (w in 1:9){
   if(w < 6)  {X = eval(parse(text=paste0("X",w)))}
   if(w == 6) {X = cbind(X4,X5)}
@@ -48,23 +48,23 @@ for (w in 1:9){
   nLV.List[[w]] = nLV.BEST
 }
 ```
-####The following script performs leave-one-trial out cross validation to obtain predictions for each model with data from heat and drought trials. Predictions of the irrigated trial were obtained separately with an adaptated version of this code.
+#### The following script performs leave-one-trial out cross validation to obtain predictions for each model with data from heat and drought trials. Predictions of the irrigated trial were obtained separately with an adaptated version of this code.
 
 ```R
-#Load libraries
+# Load libraries
 library(BGLR)
 
-#Create an object for identification of trials
+# Create an object for identification of trials
 trials = as.integer(factor(Y[,2]))
 
-#Obtain predictions from single time point data
+# Obtain predictions from single time point data
 for (k in 1:5){
-  #initialize the object that will contain predictions
+  # initialize the object that will contain predictions
   YHat = data.frame(matrix(nrow=length(y),ncol=9))
   colnames(YHat)=c('NDVI','CWMI','mND','PRI','MTCI','MCARI2','OLS','PLS','BayesB')
   X = eval(parse(text=paste0('X',k)))
   X = X/sqrt(ncol(X))
-  #Cross Validation leave one trial out
+  # Cross Validation leave one trial out
   for (i in unique(trials)){
     print(i)
     trn = which(trials!=i); tst = which(trials==i)
@@ -114,11 +114,11 @@ for (k in 1:5){
     pY9 = as.matrix(X.TST)%*%Model9$ETA[[1]]$b + Model9$mu
     YHat[tst,'BayesB'] = pY9
   }
-  #Save the predictions in files separated by time point  
+  # Save the predictions in files separated by time point  
   save(y,YHat,trials,file=paste0('YHATDSCV',timePoint,'.RData'))
 }
 ```
-####Predictions with multi-time points data
+#### Predictions with multi-time points data
 ```R
 for (z in 1:4){
   timePoint = c(z:5)
@@ -129,7 +129,7 @@ for (z in 1:4){
     X[[which(timePoint==i)]] = eval(parse(text=paste0('X',i)))
     X[[which(timePoint==i)]] = X[[which(timePoint==i)]]/sqrt(ncol(X[[which(timePoint==i)]]))
   }
-  #Cross Validation leave one trial out
+  # Cross Validation leave one trial out
   for (i in unique(trials)){
     print(i)
     trn = which(trials!=i) ; tst = which(trials==i)
@@ -187,7 +187,7 @@ for (z in 1:4){
   save(y,YHat,trials,file=paste0('AnalyzingData/output/YHATDSCV',paste0(timePoint,collapse = '-'),'.RData'))
 }
 ```
-####Bootstrap correlations and SE
+#### Bootstrap correlations and SE
 
 ```R
 #number of replicates
@@ -224,7 +224,7 @@ for (index in 1:ncol(YHAT)){
 }
 colnames(WW.WWTC) <- colnames(DS.WWTC) <- colnames(YHAT)
 ```
-####Table with results
+#### Table with results
 ```R
 PropMatrix = matrix(ncol=ncol(YHAT),nrow=ncol(YHAT))
 for(i in 1:ncol(YHAT)){ 
